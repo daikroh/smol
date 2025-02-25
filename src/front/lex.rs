@@ -103,13 +103,37 @@ impl<'input> Lexer<'input> {
     /// - Some(token) where the token is the next token.
     /// - Some(Error) if none of the recognizers work, i.e. if there is a lexer error.
     pub fn next<'a>(&'a mut self) -> Option<Token<'input>> {
-        todo!()
+        self.skip_whitespace();
+        if self.end_of_input() {
+            return None;
+        }
+
+        let (kind, len) = self
+        .matchers
+        .iter()
+        .find_map(|(re, kind)| {re.find(&self.input[self.pos..]).map(|m| {(*kind, m.len())})})
+        .unwrap_or((Error, 1));
+        
+        let token = Token {
+            kind,
+            text: &self.input[self.pos..(self.pos + len)]
+        };
+
+        self.pos += len;
+        Some(token)
     }
 }
 
 /// Read all the tokens from input
 pub fn get_tokens(input: &str) -> Vec<Token> {
-    todo!()
+    let mut lexer = Lexer::new(input);
+
+    let mut tokens = vec![];
+
+    while let Some(token) = lexer.next() {
+        tokens.push(token);
+    }
+    tokens
 }
 
 #[cfg(test)]
@@ -123,7 +147,7 @@ mod tests {
         Token { kind: Id, text }
     }
 
-    // Create a num token
+    // Cr3eate a num token
     fn num(text: &str) -> Token {
         Token { kind: Num, text }
     }
